@@ -4,14 +4,18 @@ var tape = require('tape')
 
 module.exports = function (log) {
 
-  tape('stream forward and backward', function (t) {
-
-    function assertStream (opts, expected) {
+  function assertStream(t, next) {
+    return function assertStream (opts, expected) {
       pull(log.stream(opts), pull.collect(function (err, ary) {
         if(err) throw err
         t.deepEqual(ary, expected)
+        next()
       }))
     }
+  }
+
+
+  tape('stream forward and backward', function (t) {
 
     function values (ary) {
       return ary.map(function (e) { return e.value })
@@ -20,15 +24,9 @@ module.exports = function (log) {
       return ary.map(function (e) { return e.seq })
     }
 
-    var expected = [
-      {seq: 0, value: 'a'},
-      {seq: 1, value: 'b'},
-      {seq: 2, value: 'c'}
-    ]
-
     t.test('empty stream', function (t) {
-      assertStream({}, [])
-      t.end()
+      assertStream(t, next)({}, [])
+      function next () { t.end() }
     })
 
     t.test('since is null - to represent empty', function (t) {
@@ -37,6 +35,7 @@ module.exports = function (log) {
     })
 
     t.test('stream with 3 items', function (t) {
+      t.plan(18)
 
       //since it's a batch, update at once.
       var _since
@@ -58,35 +57,36 @@ module.exports = function (log) {
 
             var _0 = expected[0].seq
             var _2 = expected[2].seq
-            t.plan(15)
+            var n = 15
 
-            assertStream({seqs: false}, values(expected))
-            assertStream({gt: _0, seqs: false}, values(expected.slice(1)))
-            assertStream({gt: _0, reverse: true, seqs: false}, values(expected.slice(1)).reverse())
-            assertStream({gte: _0, seqs:false}, values(expected))
-            assertStream({lt: _2, seqs: false}, values(expected.slice(0, 2)))
+            var test = assertStream(t, next)
 
-            assertStream({},                     (expected))
-            assertStream({gt: _0},                (expected.slice(1)))
-            assertStream({gt: _0, reverse: true}, (expected.slice(1)).reverse())
-            assertStream({gte: _0},               (expected))
-            assertStream({lt: _2},                (expected.slice(0, 2)))
+            test({seqs: false}, values(expected))
+            test({gt: _0, seqs: false}, values(expected.slice(1)))
+            test({gt: _0, reverse: true, seqs: false}, values(expected.slice(1)).reverse())
+            test({gte: _0, seqs:false}, values(expected))
+            test({lt: _2, seqs: false}, values(expected.slice(0, 2)))
 
-            assertStream({values: false},                       seqs(expected))
-            assertStream({gt: _0, values: false},                seqs(expected.slice(1)))
-            assertStream({gt: _0, reverse: true, values: false}, seqs(expected.slice(1)).reverse())
-            assertStream({gte: _0, values: false},               seqs(expected))
-            assertStream({lt: _2, values: false},                seqs(expected.slice(0, 2)))
+            test( {},                     (expected))
+            test({gt: _0},                (expected.slice(1)))
+            test({gt: _0, reverse: true}, (expected.slice(1)).reverse())
+            test({gte: _0},               (expected))
+            test({lt: _2},                (expected.slice(0, 2)))
+
+            test({values: false},                       seqs(expected))
+            test({gt: _0, values: false},                seqs(expected.slice(1)))
+            test({gt: _0, reverse: true, values: false}, seqs(expected.slice(1)).reverse())
+            test({gte: _0, values: false},               seqs(expected))
+            test({lt: _2, values: false},                seqs(expected.slice(0, 2)))
+
+            function next () {
+              if(--n) return
+              t.end()
+            }
+
           })
         )
-
-
-
-//        t.equal(log.since.value, 2)
-
-        t.end()
       })
-
     })
 
     tape('get', function (t) {
@@ -135,4 +135,11 @@ module.exports = function (log) {
   })
 
 }
+
+
+
+
+
+
+
 
