@@ -110,8 +110,27 @@ module.exports = function (log) {
         source = log.stream({live: true, seqs: false}),
         pull.drain(function (a) {
           seen.push(a)
+          if(seen.length === 4) {
+            t.deepEqual(seen, ['a', 'b', 'c', 'd'])
+
+            //abort the stream
+            return false
+          }
         }, function () {
           ended ++
+          log.append('e', function (err, _seq) {
+            t.equal(ended, 1, 'ended only once')
+            //check that it did not read the 'e'
+            t.deepEqual(seen, ['a', 'b', 'c', 'd'])
+            pull(
+              log.stream({seqs: false}),
+              pull.collect(function (err, ary) {
+                if(err) throw err
+                t.deepEqual(ary, ['a', 'b', 'c', 'd', 'e'])
+                t.end()
+              })
+            )
+          })
         })
       )
 
@@ -119,22 +138,18 @@ module.exports = function (log) {
       log.append(['d'], function (err, seq) {
         if(err) throw err
         t.ok(seq > last)
-        t.deepEqual(seen, ['a', 'b', 'c', 'd'])
-
-        source(true, function () {
-          t.equal(ended, 1)
-          log.append('e', function (err, _seq) {
-            t.equal(ended, 1, 'ended only once')
-            t.ok(_seq > seq)
-            t.end()
-          })
-
-        })
+        seq = last
       })
     })
   })
 
 }
+
+
+
+
+
+
 
 
 
