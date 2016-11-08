@@ -8,7 +8,7 @@ module.exports = function (log) {
     return function assertStream (opts, expected) {
       pull(log.stream(opts), pull.collect(function (err, ary) {
         if(err) throw err
-        t.deepEqual(ary, expected)
+        t.deepEqual(ary, expected, 'test:'+JSON.stringify(opts))
         next()
       }))
     }
@@ -35,7 +35,7 @@ module.exports = function (log) {
     })
 
     t.test('stream with 3 items', function (t) {
-      t.plan(18)
+      //t.plan(19)
 
       //since it's a batch, update at once.
       var _since
@@ -59,6 +59,7 @@ module.exports = function (log) {
             var _2 = expected[2].seq
             var n = 15
 
+            console.log('--------------------------------------')
             var test = assertStream(t, next)
 
             test({seqs: false}, values(expected))
@@ -78,6 +79,8 @@ module.exports = function (log) {
             test({gt: _0, reverse: true, values: false}, seqs(expected.slice(1)).reverse())
             test({gte: _0, values: false},               seqs(expected))
             test({lt: _2, values: false},                seqs(expected.slice(0, 2)))
+
+            test({gt: _2}, [])
 
             function next () {
               if(--n) return
@@ -144,17 +147,5 @@ module.exports = function (log) {
   })
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
