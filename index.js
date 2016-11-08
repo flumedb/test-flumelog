@@ -35,7 +35,7 @@ module.exports = function (log) {
     })
 
     t.test('stream with 3 items', function (t) {
-      //t.plan(19)
+      t.plan(19)
 
       //since it's a batch, update at once.
       var _since
@@ -57,7 +57,7 @@ module.exports = function (log) {
 
             var _0 = expected[0].seq
             var _2 = expected[2].seq
-            var n = 15
+            var n = 16
 
             console.log('--------------------------------------')
             var test = assertStream(t, next)
