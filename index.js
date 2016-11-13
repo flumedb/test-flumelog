@@ -1,6 +1,7 @@
 
 var pull = require('pull-stream')
 var tape = require('tape')
+var Spec = require('pull-spec')
 
 module.exports = function (log) {
 
@@ -108,9 +109,9 @@ module.exports = function (log) {
     })
 
     tape('live', function (t) {
-      var seen = [], source, ended = 0
+      var seen = [], ended = 0
       pull(
-        source = log.stream({live: true, seqs: false}),
+        Spec(log.stream({live: true, seqs: false})),
         pull.drain(function (a) {
           seen.push(a)
           if(seen.length === 4) {
@@ -121,6 +122,7 @@ module.exports = function (log) {
           }
         }, function () {
           ended ++
+          if(ended > 1) throw new Error('ended twice')
           log.append('e', function (err, _seq) {
             t.equal(ended, 1, 'ended only once')
             //check that it did not read the 'e'
@@ -147,5 +149,7 @@ module.exports = function (log) {
   })
 
 }
+
+
 
 

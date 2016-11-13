@@ -8,6 +8,7 @@
     "url": "git://github.com/dominictarr/test-flumelog.git"
   },
   "dependencies": {
+    "pull-spec": "0.0.1",
     "pull-stream": "^3.5.0",
     "tape": "^4.6.2"
   },
